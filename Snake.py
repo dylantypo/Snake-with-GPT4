@@ -258,7 +258,7 @@ def check_and_create_highscores_file(file_name):
 def save_high_scores(high_scores):
     with open(HIGH_SCORES_FILE, "w") as file:
         for score, initials in high_scores:
-            file.write(f"{score}, {initials}\n")
+            file.write(f"{score},{initials}\n")
 
 def show_high_scores_screen(screen, high_scores, background_color, food_color):
     # Fill the screen with background color
@@ -271,7 +271,7 @@ def show_high_scores_screen(screen, high_scores, background_color, food_color):
     # Display high scores
     y_offset = 100
     for index, (score, initials) in enumerate(high_scores):
-        text = font.render(f"{index + 1}.{score} -> {initials}", 1, background_color, food_color)
+        text = font.render(f"{index + 1}.{score}->{initials}", 1, background_color, food_color)
         screen.blit(text, (250, 50 + y_offset))
         y_offset += 40
 
@@ -334,6 +334,10 @@ def get_initials(screen, prompt="Enter name: ", color=(255, 255, 255), backgroun
             elif event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
+
+        # Clear the previous text
+        rect = pygame.Rect(0, (GRID_HEIGHT * CELL_SIZE // 2 + 60), GRID_WIDTH * CELL_SIZE, 40)
+        pygame.draw.rect(screen, background_color, rect)
 
         # Render the current text input
         font = pygame.font.Font(FONT, 16)
@@ -424,22 +428,22 @@ def main(theme, high_scores, screen, clock, SPEED):
         # Play the game and update high scores
         running, score, background_color, snake_color, high_scores = game_loop(running, screen, clock, theme, high_scores, SPEED)
 
-        # Get player initials after game over
-        initials = get_initials(screen, color = snake_color, background_color = background_color)
-
-        high_scores.append((score, initials))
-        high_scores.sort(reverse=True)
-        high_scores = high_scores[:10]
-
-        # Save high scores to file
-        save_high_scores(high_scores)
-
-        # Redrawing background to display "Game Over" screen
-        screen.fill(background_color)
-
         # Display a "Game Over" screen
         if running:
             restart = False
+
+            # Get player initials after game over
+            initials = get_initials(screen, color = snake_color, background_color = background_color)
+
+            high_scores.append((score, initials))
+            high_scores.sort(reverse=True)
+            high_scores = high_scores[:10]
+
+            # Save high scores to file
+            save_high_scores(high_scores)
+
+            # Redrawing background to display "Game Over" screen
+            screen.fill(background_color)
 
             # Set up the font and create text surfaces
             font = pygame.font.Font(FONT, 16)
