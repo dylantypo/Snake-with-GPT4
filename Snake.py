@@ -98,15 +98,15 @@ class Food:
                 return position
             
 class Button:
-    def __init__(self, x, y, width, height, text, function=None, color=(255, 255, 255)):
+    def __init__(self, x, y, width, height, text, function=None, color=(255, 255, 255), border_radius=10):
         self.rect = pygame.Rect(x, y, width, height) # Button rectangle
         self.text = text # Button text
         self.function = function # Function to call when the button is clicked
         self.color = color # Button color
+        self.border_radius = border_radius # Radius of the button corners
         # Calculate the highlighted color when the mouse is over the button
         self.highlighted_color = tuple([min(c + 50, 255) for c in self.color])
         self.font = pygame.font.Font("PressStart2P-Regular.ttf", 16) # Button font
-        self.image = pygame.Surface((width, height)) # Button surface
         self.text_surface = self.font.render(self.text, True, (0, 0, 0)) # Rendered text surface
         self.text_rect = self.text_surface.get_rect(center=(width // 2, height // 2)) # Text rectangle
 
@@ -122,16 +122,13 @@ class Button:
     def draw(self, screen):
         # Check if the mouse is over the button and change its color accordingly
         if self.rect.collidepoint(pygame.mouse.get_pos()):
-            self.image.fill(self.highlighted_color)
+            pygame.draw.rect(screen, self.highlighted_color, self.rect, border_radius=self.border_radius)
         else:
-            self.image.fill(self.color)
+            pygame.draw.rect(screen, self.color, self.rect, border_radius=self.border_radius)
 
         # Draw the button text
         if self.text:
-            self.image.blit(self.text_surface, self.text_rect)
-
-        # Draw the button surface on the screen
-        screen.blit(self.image, self.rect.topleft)
+            screen.blit(self.text_surface, self.text_rect.move(self.rect.topleft))
 
 #### Main Functions
 # Function to display pre-game selection menus
