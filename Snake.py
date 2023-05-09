@@ -12,6 +12,7 @@ faulthandler.enable()
 
 #### Game Parameters
 # Game constants
+FONT = "PressStart2P-Regular.ttf"
 SNEK_START_LEN = 1 # Initial snake length
 SNEK_MULTIPLIER = 3 # Amount snake grows after eating food
 CELL_SIZE = 40 # Size of each grid cell
@@ -134,7 +135,7 @@ class Button:
         self.bottom_rounded = bottom_rounded # Flag for rounded bottom corners
         # Calculate the highlighted color when the mouse is over the button
         self.highlighted_color = tuple([min(c + 50, 255) for c in self.color])
-        self.font = pygame.font.Font("PressStart2P-Regular.ttf", 16) # Button font
+        self.font = pygame.font.Font(FONT, 16) # Button font
         self.text_surface = self.font.render(self.text, True, self.text_color) # Rendered text surface
         self.text_rect = self.text_surface.get_rect(center=(width // 2, height // 2)) # Text rectangle
 
@@ -226,7 +227,7 @@ def display_menu(screen, title, themes):
         screen.fill((0, 0, 0))
 
         # Display title text
-        font_title = pygame.font.Font("PressStart2P-Regular.ttf", 24)
+        font_title = pygame.font.Font(FONT, 24)
         text_title = font_title.render(str(title), True, (255, 255, 255))
         text_title_rect = text_title.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, 50))
         screen.blit(text_title, text_title_rect)
@@ -252,25 +253,25 @@ def display_menu(screen, title, themes):
 def check_and_create_highscores_file(file_name):
     if not os.path.exists(file_name):
         with open(file_name, "w") as file:
-            file.write(f"0\n0\n0\n0\n0\n0\n0\n0\n0\n0")
+            file.write(f"0,AAA\n0,AAA\n0,AAA\n0,AAA\n0,AAA\n0,AAA\n0,AAA\n0,AAA\n0,AAA\n0,AAA")
 
 def save_high_scores(high_scores):
     with open(HIGH_SCORES_FILE, "w") as file:
-        for score in high_scores:
-            file.write(f"{score}\n")
+        for score, initials in high_scores:
+            file.write(f"{score}, {initials}\n")
 
 def show_high_scores_screen(screen, high_scores, background_color, food_color):
     # Fill the screen with background color
     screen.fill(background_color)
 
-    font = pygame.font.Font("PressStart2P-Regular.ttf", 36)
+    font = pygame.font.Font(FONT, 36)
     text = font.render("High Scores", 1, background_color, food_color)
     screen.blit(text, (250, 50))
 
     # Display high scores
     y_offset = 100
-    for index, score in enumerate(high_scores):
-        text = font.render(f"{index + 1}. {score}", 1, background_color, food_color)
+    for index, (score, initials) in enumerate(high_scores):
+        text = font.render(f"{index + 1}.{score} -> {initials}", 1, background_color, food_color)
         screen.blit(text, (250, 50 + y_offset))
         y_offset += 40
 
@@ -318,6 +319,29 @@ def draw_cell(screen, pos, color, glow_color=None, glow_radius=35, glow_alpha=35
 
 def hex_to_rgb(hex_color):
     return tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))
+
+def get_initials(screen, prompt="Enter name: ", color=(255, 255, 255), background_color=(0, 0, 0)):
+    text = ''
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    return text.upper()[:3]  # Return the first three characters in upper case
+                elif event.key == pygame.K_BACKSPACE:
+                    text = text[:-1]
+                else:
+                    text += event.unicode
+            elif event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+        # Render the current text input
+        font = pygame.font.Font(FONT, 16)
+        block = font.render(prompt + text, True, color, background_color)
+        rect = block.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, GRID_HEIGHT * CELL_SIZE // 2 + 80))
+        screen.blit(block, rect)
+
+        pygame.display.flip()
 
 def game_loop(running, screen, clock, theme, high_scores, SPEED):
     # Initialize colors and game objects
@@ -399,19 +423,26 @@ def main(theme, high_scores, screen, clock, SPEED):
     while running:
         # Play the game and update high scores
         running, score, background_color, snake_color, high_scores = game_loop(running, screen, clock, theme, high_scores, SPEED)
-        high_scores.append(score)
+
+        # Get player initials after game over
+        initials = get_initials(screen, color = snake_color, background_color = background_color)
+
+        high_scores.append((score, initials))
         high_scores.sort(reverse=True)
         high_scores = high_scores[:10]
 
         # Save high scores to file
         save_high_scores(high_scores)
 
+        # Redrawing background to display "Game Over" screen
+        screen.fill(background_color)
+
         # Display a "Game Over" screen
         if running:
             restart = False
 
             # Set up the font and create text surfaces
-            font = pygame.font.Font("PressStart2P-Regular.ttf", 16)
+            font = pygame.font.Font(FONT, 16)
             text_game_over = font.render("Game Over!", True, snake_color, background_color)
             text_restart = font.render("Press R to restart or Q to quit.", True, snake_color, background_color)
             text_score = font.render(f"Score: {score}", True, snake_color, background_color)
@@ -484,8 +515,8 @@ if __name__ == "__main__":
     # Load high scores from file
     if os.path.exists(HIGH_SCORES_FILE):
         with open(HIGH_SCORES_FILE, "r") as file:
-            lines = file.readlines() # Read all lines in the file
-            high_scores = [int(score) for score in lines] # Add each score to the high_scores list
+            high_scores = [tuple(line.strip().split(",")) for line in file]
+            high_scores = [(int(score), initials) for score, initials in high_scores]
  
     # Play Snake
     main(game_theme, high_scores, screen, clock, (SPEED + difficulty_value))
