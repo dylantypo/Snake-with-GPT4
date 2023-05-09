@@ -1,8 +1,9 @@
 #### Imports
 import pygame
 import pygame.gfxdraw
-import sys
 import random
+import time
+import sys
 import os
 
 #### Game Parameters
@@ -98,16 +99,17 @@ class Food:
                 return position
             
 class Button:
-    def __init__(self, x, y, width, height, text, function=None, color=(255, 255, 255), border_radius=10):
+    def __init__(self, x, y, width, height, text, function=None, color=(255, 255, 255), text_color = (0, 0, 0), border_radius=10):
         self.rect = pygame.Rect(x, y, width, height) # Button rectangle
         self.text = text # Button text
+        self.text_color = text_color # Color of button text
         self.function = function # Function to call when the button is clicked
         self.color = color # Button color
         self.border_radius = border_radius # Radius of the button corners
         # Calculate the highlighted color when the mouse is over the button
         self.highlighted_color = tuple([min(c + 50, 255) for c in self.color])
         self.font = pygame.font.Font("PressStart2P-Regular.ttf", 16) # Button font
-        self.text_surface = self.font.render(self.text, True, (0, 0, 0)) # Rendered text surface
+        self.text_surface = self.font.render(self.text, True, self.text_color) # Rendered text surface
         self.text_rect = self.text_surface.get_rect(center=(width // 2, height // 2)) # Text rectangle
 
     # Update the button state and check for mouse clicks
@@ -178,6 +180,8 @@ def display_menu(screen, title, themes):
         # Draw buttons and update the display
         draw_buttons(screen, menu_buttons)
         pygame.display.flip()
+
+    time.sleep(1)  # Pause for a moment before returning
 
 def check_and_create_highscores_file(file_name):
     if not os.path.exists(file_name):
@@ -314,7 +318,7 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
     # Calculate the score
     score = round((len(snake.body) - SNEK_START_LEN) * 2.5)
 
-    return running, score, background_color, snake_color, food_color, high_scores
+    return running, score, background_color, snake_color, high_scores
 
 def main(theme, high_scores, screen, clock, SPEED):
     running = True
@@ -322,7 +326,7 @@ def main(theme, high_scores, screen, clock, SPEED):
     # Main game loop
     while running:
         # Play the game and update high scores
-        running, score, background_color, snake_color, food_color, high_scores = game_loop(running, screen, clock, theme, high_scores, SPEED)
+        running, score, background_color, snake_color, high_scores = game_loop(running, screen, clock, theme, high_scores, SPEED)
         high_scores.append(score)
         high_scores.sort(reverse=True)
         high_scores = high_scores[:10]
@@ -346,7 +350,13 @@ def main(theme, high_scores, screen, clock, SPEED):
             text_score_rect = text_score.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, GRID_HEIGHT * CELL_SIZE // 2))
             
             # Create the "High Scores" button
-            high_scores_button = Button((GRID_WIDTH * CELL_SIZE // 2) - 100, GRID_HEIGHT * CELL_SIZE // 2 + 30, 200, 50, "High Scores", function=lambda: show_high_scores_screen(screen, high_scores, background_color, food_color), color=hex_to_rgb(snake_color))
+            high_scores_button = Button(
+                (GRID_WIDTH * CELL_SIZE // 2) - 100, 
+                GRID_HEIGHT * CELL_SIZE // 2 + 30, 200, 50, 
+                "High Scores", 
+                function=lambda: show_high_scores_screen(screen, high_scores, background_color, snake_color), 
+                color=hex_to_rgb(snake_color), 
+                text_color=hex_to_rgb(background_color))
 
             # Loop to handle input events for restarting or quitting
             while True:
@@ -377,8 +387,6 @@ def main(theme, high_scores, screen, clock, SPEED):
 
                 # Update the display
                 pygame.display.flip()
-
-    print("...bye")
 
 if __name__ == "__main__":
     pygame.init()
