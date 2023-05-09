@@ -6,6 +6,10 @@ import time
 import sys
 import os
 
+#### Fault Handler
+import faulthandler
+faulthandler.enable()
+
 #### Game Parameters
 # Game constants
 SNEK_START_LEN = 1 # Initial snake length
@@ -50,11 +54,16 @@ class Snake:
     def __init__(self, start_len):
         self.body = [(GRID_WIDTH // 2, GRID_HEIGHT // 2)] # Initialize snake body at center of grid
         self.direction = (sX, sY) # Set initial direction
+        self.direction_queue = [] # Queue to store direction changes
         # Initial Snake Size
         for _ in range(start_len):
             self.grow()
 
     def move(self):
+        # Apply one direction change from the queue if available
+        if self.direction_queue:
+            self.direction = self.direction_queue.pop(0)
+
         # Calculate new head position based on current head position and direction
         head_x, head_y = self.body[0]
         dir_x, dir_y = self.direction
@@ -64,7 +73,16 @@ class Snake:
         self.body.pop()
 
     def change_direction(self, new_direction):
-        self.direction = new_direction # Update the snake's direction
+        # Check if the new direction is not directly opposite to the current direction
+        if self.direction_queue:
+            last_direction = self.direction_queue[-1]
+        else:
+            last_direction = self.direction
+        last_dir_x, last_dir_y = last_direction
+        new_dir_x, new_dir_y = new_direction
+        if last_dir_x != -new_dir_x and last_dir_y != -new_dir_y:
+            # Add the new direction to the queue
+            self.direction_queue.append(new_direction)
 
     def grow(self):
         tail_x, tail_y = self.body[-1] # Get the tail position
