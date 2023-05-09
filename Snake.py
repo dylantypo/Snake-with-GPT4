@@ -352,6 +352,10 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
     background_color, snake_color, food_color = theme["background_color"], theme["snake_color"], theme["food_color"]
     snake = Snake(SNEK_START_LEN)
     food = Food(snake)
+
+    munch = 0 # how many times the snake eats
+    score = 0 # initial score value
+
     game_over = False
 
     # Create a custom event for snake growth
@@ -394,6 +398,12 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
             growth_counter = SNEK_MULTIPLIER
             pygame.time.set_timer(GROWTH_EVENT, 250, loops=growth_counter)
             food = Food(snake)
+            munch += 1 # eating + 1
+            if munch // 10 == 0:
+                score += round((len(snake.body) - SNEK_START_LEN) * 2.5) # double score bonus every 10 foods
+            else:
+                score = round((len(snake.body) - SNEK_START_LEN) * 2.5) # normal score increase
+
         
         # Check for collisions with the snake itself
         if snake.collides_with(snake.body[0], ignore_head=True):
@@ -414,9 +424,6 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
         # Update the display and control game speed
         pygame.display.flip()
         clock.tick(SPEED)
-
-    # Calculate the score
-    score = round((len(snake.body) - SNEK_START_LEN) * 2.5)
 
     return running, score, background_color, snake_color, high_scores
 
@@ -503,11 +510,6 @@ if __name__ == "__main__":
     pygame.display.set_caption("Snake.") # PyGame screen title
     clock = pygame.time.Clock() # Initialize game time
 
-    #### ALL-TIME SCORES RECORD
-    HIGH_SCORES_FILE = "Assets/high_scores.txt" # Store high scores file as a variable
-    check_and_create_highscores_file(HIGH_SCORES_FILE)
-    high_scores = []
-
     # Theme Select Menu
     theme_names = list(theme_dict.keys()) # Get theme names from dictionary of themes
     selected_theme_index = display_menu(screen, "Select Theme", theme_names) # Display theme selection menu
@@ -517,6 +519,11 @@ if __name__ == "__main__":
     difficulty_index = display_menu(screen, "Select Difficulty", ["Easy", "Medium", "Hard"]) # Display difficulty selection menu
     difficulty_lambda = lambda index: {0: -10, 1: 0, 2: 10}[index]
     difficulty_value = difficulty_lambda(difficulty_index) # Convert button index into difficulty value and store as a variable
+    
+    #### ALL-TIME SCORES RECORD
+    HIGH_SCORES_FILE = "Assets/high_scores.txt" # Store high scores file as a variable
+    check_and_create_highscores_file(HIGH_SCORES_FILE)
+    high_scores = []
 
     # Load high scores from file
     if os.path.exists(HIGH_SCORES_FILE):
