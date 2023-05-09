@@ -117,13 +117,21 @@ class Food:
                 return position
             
 class Button:
-    def __init__(self, x, y, width, height, text, function=None, color=(255, 255, 255), text_color = (0, 0, 0), border_radius=10):
+    def __init__(self, 
+                 x, y, 
+                 width, height, 
+                 text, 
+                 function=None, 
+                 color=(255, 255, 255), 
+                 text_color = (0, 0, 0),
+                 top_rounded = True, bottom_rounded = True):
         self.rect = pygame.Rect(x, y, width, height) # Button rectangle
         self.text = text # Button text
         self.text_color = text_color # Color of button text
         self.function = function # Function to call when the button is clicked
         self.color = color # Button color
-        self.border_radius = border_radius # Radius of the button corners
+        self.top_rounded = top_rounded # Flag for rounded top corners
+        self.bottom_rounded = bottom_rounded # Flag for rounded bottom corners
         # Calculate the highlighted color when the mouse is over the button
         self.highlighted_color = tuple([min(c + 50, 255) for c in self.color])
         self.font = pygame.font.Font("PressStart2P-Regular.ttf", 16) # Button font
@@ -137,14 +145,45 @@ class Button:
         if event.type == pygame.MOUSEBUTTONDOWN and self.rect.collidepoint(pygame.mouse.get_pos()):
             if self.function:
                 return self.function()
+            
+
+    # Checks for a border radius
+    def get_border_radius(self):
+        return 10 if self.top_rounded or self.bottom_rounded else 0
+
+    def get_top_left_radius(self):
+        return 10 if self.top_rounded else 0
+
+    def get_top_right_radius(self):
+        return 10 if self.top_rounded else 0
+
+    def get_bottom_left_radius(self):
+        return 10 if self.bottom_rounded else 0
+
+    def get_bottom_right_radius(self):
+        return 10 if self.bottom_rounded else 0
 
     # Draw the button on the screen
     def draw(self, screen):
         # Check if the mouse is over the button and change its color accordingly
         if self.rect.collidepoint(pygame.mouse.get_pos()):
-            pygame.draw.rect(screen, self.highlighted_color, self.rect, border_radius=self.border_radius)
+            pygame.draw.rect(screen, 
+                             self.highlighted_color, 
+                             self.rect, 
+                             border_radius=self.get_border_radius(), 
+                             border_top_left_radius=self.get_top_left_radius(), 
+                             border_top_right_radius=self.get_top_right_radius(), 
+                             border_bottom_left_radius=self.get_bottom_left_radius(), 
+                             border_bottom_right_radius=self.get_bottom_right_radius())
         else:
-            pygame.draw.rect(screen, self.color, self.rect, border_radius=self.border_radius)
+            pygame.draw.rect(screen, 
+                             self.color, 
+                             self.rect, 
+                             border_radius=self.get_border_radius(), 
+                             border_top_left_radius=self.get_top_left_radius(), 
+                             border_top_right_radius=self.get_top_right_radius(), 
+                             border_bottom_left_radius=self.get_bottom_left_radius(), 
+                             border_bottom_right_radius=self.get_bottom_right_radius())
 
         # Draw the button text
         if self.text:
@@ -165,7 +204,16 @@ def display_menu(screen, title, themes):
     for i, theme_name in enumerate(themes):
         button_x = (GRID_WIDTH * CELL_SIZE - button_width) // 2
         button_y = start_y + i * (button_height + button_spacing)
-        menu_buttons.append(Button(button_x, button_y, button_width, button_height, theme_name, function=lambda i=i: i))
+        top_rounded = (i == 0)
+        bottom_rounded = (i == len(themes) - 1)
+        menu_buttons.append(Button(button_x, 
+                                   button_y, 
+                                   button_width, 
+                                   button_height, 
+                                   theme_name, 
+                                   function=lambda i=i: i, 
+                                   top_rounded=top_rounded, 
+                                   bottom_rounded=bottom_rounded))
     
     # Function to draw buttons on the screen
     def draw_buttons(screen, menu_buttons):
@@ -250,7 +298,11 @@ def draw_glowing_circle(screen, pos, radius, color, alpha):
 def draw_cell(screen, pos, color, glow_color=None, glow_radius=35, glow_alpha=35, alpha=100):
     if glow_color:
         x, y = pos
-        draw_glowing_circle(screen, (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2), glow_radius, glow_color, alpha)
+        draw_glowing_circle(screen, 
+                            (x * CELL_SIZE + CELL_SIZE // 2, y * CELL_SIZE + CELL_SIZE // 2), 
+                            glow_radius, 
+                            glow_color, 
+                            alpha)
 
     x, y = pos
     cell_margin = 2
@@ -260,7 +312,9 @@ def draw_cell(screen, pos, color, glow_color=None, glow_radius=35, glow_alpha=35
     elif len(color) == 4:
         color = (*color[:3], alpha)
 
-    pygame.draw.rect(screen, color, (x * CELL_SIZE + cell_margin, y * CELL_SIZE + cell_margin, CELL_SIZE - 2 * cell_margin, CELL_SIZE - 2 * cell_margin))
+    pygame.draw.rect(screen, 
+                     color, 
+                     (x * CELL_SIZE + cell_margin, y * CELL_SIZE + cell_margin, CELL_SIZE - 2 * cell_margin, CELL_SIZE - 2 * cell_margin))
 
 def hex_to_rgb(hex_color):
     return tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))
