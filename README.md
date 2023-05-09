@@ -17,14 +17,14 @@ Some ideas for expanding the game or enhancing its retro style:
 
 Feel free to experiment and modify the code as needed to create the snake game you envision.
 
-### Game Instructions:
+### ***Game Instructions***:
 1. Select a theme
 2. Select a difficulty
 3. Play
-    a. Press Esc at anytime to quit
-4. ***Game Over***
-    a. Give your score a name (only first three characters are saved)
-    b. Press q to Quit and r to play again
-    c. Press high scores button to see the leader board
-    d. Press Esc to go back to the Game Over screen
+  a. Press Esc at anytime to quit
+4. *Game Over*
+  a. Give your score a name (only first three characters are saved)
+  b. Press q to Quit and r to play again
+  c. Press high scores button to see the leader board
+  d. Press Esc to go back to the Game Over screen
 5. Repeat
