@@ -12,7 +12,7 @@ faulthandler.enable()
 
 #### Game Parameters
 # Game constants
-FONT = "PressStart2P-Regular.ttf"
+FONT = "Assets/PressStart2P-Regular.ttf"
 SNEK_START_LEN = 1 # Initial snake length
 SNEK_MULTIPLIER = 3 # Amount snake grows after eating food
 CELL_SIZE = 40 # Size of each grid cell
@@ -497,12 +497,14 @@ def main(theme, high_scores, screen, clock, SPEED):
 
 if __name__ == "__main__":
     pygame.init()
+    snake_logo = pygame.image.load("Assets/snake-logo.png") # Load snake logo
+    pygame.display.set_icon(snake_logo) # Set snake logo as window icon
     screen = pygame.display.set_mode((GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE)) # Create PyGame screen with prarameters defined at the top
     pygame.display.set_caption("Snake.") # PyGame screen title
     clock = pygame.time.Clock() # Initialize game time
 
     #### ALL-TIME SCORES RECORD
-    HIGH_SCORES_FILE = "high_scores.txt" # Store high scores file as a variable
+    HIGH_SCORES_FILE = "Assets/high_scores.txt" # Store high scores file as a variable
     check_and_create_highscores_file(HIGH_SCORES_FILE)
     high_scores = []
 
