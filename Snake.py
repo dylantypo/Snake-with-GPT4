@@ -310,7 +310,7 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
         # Check for collisions with food and grow snake
         if snake.collides_with(food.position):
             growth_counter = SNEK_MULTIPLIER
-            pygame.time.set_timer(GROWTH_EVENT, 100, loops=growth_counter)
+            pygame.time.set_timer(GROWTH_EVENT, 250, loops=growth_counter)
             food = Food(snake)
         
         # Check for collisions with the snake itself
