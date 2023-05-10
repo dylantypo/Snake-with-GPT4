@@ -352,6 +352,60 @@ def get_initials(GRID_WIDTH, GRID_HEIGHT, screen, prompt="Enter name: ", color=(
 
         pygame.display.flip()
 
+# Theme Select Menu
+def theme_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color = (0, 0, 0)):
+    theme_names = list(theme_dict.keys()) # Get theme names from dictionary of themes
+    selected_theme_index = display_menu(GRID_WIDTH, GRID_HEIGHT, screen, "Select Theme", theme_names) # Display theme selection menu
+    game_theme = theme_dict[theme_names[selected_theme_index]] # Store selected theme
+    screen.fill(background_color)
+    return game_theme
+
+# Difficulty selection
+def diff_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color = (0, 0, 0)):
+    difficulty_index = display_menu(GRID_WIDTH, GRID_HEIGHT, screen, "Select Difficulty", ["Easy", "Medium", "Hard"]) # Display difficulty selection menu
+    difficulty_lambda = lambda index: {0: -10, 1: 0, 2: 10}[index]
+    difficulty_value = difficulty_lambda(difficulty_index) # Convert button index into difficulty value and store as a variable
+    screen.fill(background_color)
+    return difficulty_value + SPEED
+
+def get_display_info():
+    #### Get Current Display Info
+    infoObject = pygame.display.Info()
+    DISPLAY_WIDTH, DISPLAY_HEIGHT = infoObject.current_w, infoObject.current_h
+    return DISPLAY_WIDTH, DISPLAY_HEIGHT
+
+def intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, logo, game_title):
+    #Black Screen
+    screen.fill((0, 0, 0))
+
+    # Scale the logo
+    scaled_logo = pygame.transform.scale(logo, (logo.get_width() * 5, logo.get_height() * 5))
+
+    # Create a font object for the game title
+    font = pygame.font.Font(FONT, 72)
+    # Create a surface for the game title
+    title_surf = font.render(game_title, True, (255, 255, 255))
+
+    # Calculate the positions of the logo and game title
+    total_width = scaled_logo.get_width() + title_surf.get_width()
+    logo_pos = ((DISPLAY_WIDTH - total_width) // 2, (DISPLAY_HEIGHT - scaled_logo.get_height()) // 2)
+    title_pos = (logo_pos[0] + scaled_logo.get_width(), (DISPLAY_HEIGHT - title_surf.get_height()) // 2)
+
+    # Draw the logo and game title onto the screen
+    screen.blit(scaled_logo, logo_pos)
+    screen.blit(title_surf, title_pos)
+
+    # Update the display
+    pygame.display.flip()
+
+    # Wait for any key press or mouse click
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                running = False
+                break
+
 def game_loop(running, screen, clock, theme, high_scores, SPEED):
     # Initialize colors and game objects
     background_color, snake_color, food_color = theme["background_color"], theme["snake_color"], theme["food_color"]
@@ -435,58 +489,98 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
 
     return running, score, background_color, snake_color, high_scores
 
-# Theme Select Menu
-def theme_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color = (0, 0, 0)):
-    theme_names = list(theme_dict.keys()) # Get theme names from dictionary of themes
-    selected_theme_index = display_menu(GRID_WIDTH, GRID_HEIGHT, screen, "Select Theme", theme_names) # Display theme selection menu
-    game_theme = theme_dict[theme_names[selected_theme_index]] # Store selected theme
+def game_over(running, restart, GRID_WIDTH, GRID_HEIGHT, screen, score, high_scores, snake_color, background_color):
+    # Get player initials after game over
+    initials = get_initials(GRID_WIDTH, GRID_HEIGHT, screen, color = snake_color, background_color = background_color)
+
+    high_scores.append((score, initials))
+    high_scores.sort(reverse=True)
+    high_scores = high_scores[:10]
+
+    # Save high scores to file
+    save_high_scores(high_scores)
+
+    # Redrawing background to display "Game Over" screen
     screen.fill(background_color)
-    return game_theme
 
-# Difficulty selection
-def diff_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color = (0, 0, 0)):
-    difficulty_index = display_menu(GRID_WIDTH, GRID_HEIGHT, screen, "Select Difficulty", ["Easy", "Medium", "Hard"]) # Display difficulty selection menu
-    difficulty_lambda = lambda index: {0: -10, 1: 0, 2: 10}[index]
-    difficulty_value = difficulty_lambda(difficulty_index) # Convert button index into difficulty value and store as a variable
-    screen.fill(background_color)
-    return difficulty_value + SPEED
+    # Set up the font and create text surfaces
+    font = pygame.font.Font(FONT, 16)
+    text_game_over = font.render("Game Over!", True, snake_color, background_color)
+    text_restart = font.render("Press R to restart or Q to quit.", True, snake_color, background_color)
+    text_score = font.render(f"Score: {score}", True, snake_color, background_color)
 
-def get_display_info():
-    #### Get Current Display Info
-    infoObject = pygame.display.Info()
-    DISPLAY_WIDTH, DISPLAY_HEIGHT = infoObject.current_w, infoObject.current_h
-    return DISPLAY_WIDTH, DISPLAY_HEIGHT
+    # Set the position of the text surfaces
+    text_game_over_rect = text_game_over.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, GRID_HEIGHT * CELL_SIZE // 2 - 40))
+    text_restart_rect = text_restart.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, GRID_HEIGHT * CELL_SIZE // 2 - 20))
+    text_score_rect = text_score.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, GRID_HEIGHT * CELL_SIZE // 2))
 
-def intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, logo, game_title):
-    # Scale the logo
-    scaled_logo = pygame.transform.scale(logo, (logo.get_width() * 5, logo.get_height() * 5))
+    # Create the "High Scores" button
+    high_scores_button = Button(
+        (GRID_WIDTH * CELL_SIZE // 2) - 100, 
+        GRID_HEIGHT * CELL_SIZE // 2 + 30, 
+        200, 50, 
+        "High Scores", 
+        function=lambda: show_high_scores_screen(screen, high_scores, background_color, snake_color), 
+        color=hex_to_rgb(snake_color), 
+        text_color=hex_to_rgb(background_color))
 
-    # Create a font object for the game title
-    font = pygame.font.Font(FONT, 72)
-    # Create a surface for the game title
-    title_surf = font.render(game_title, True, (255, 255, 255))
+    # "Change Theme" button
+    theme_select_button = Button(
+        (GRID_WIDTH * CELL_SIZE // 2) - 100, 
+        GRID_HEIGHT * CELL_SIZE // 2 + 90, 
+        200, 50, 
+        "Change Theme", 
+        function=lambda: setattr(restart, 'new_theme', theme_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color)), 
+        color=hex_to_rgb(snake_color), 
+        text_color=hex_to_rgb(background_color))
 
-    # Calculate the positions of the logo and game title
-    total_width = scaled_logo.get_width() + title_surf.get_width()
-    logo_pos = ((DISPLAY_WIDTH - total_width) // 2, (DISPLAY_HEIGHT - scaled_logo.get_height()) // 2)
-    title_pos = (logo_pos[0] + scaled_logo.get_width(), (DISPLAY_HEIGHT - title_surf.get_height()) // 2)
+    # "Change Difficulty" button
+    diff_select_button = Button(
+        (GRID_WIDTH * CELL_SIZE // 2) - 100, 
+        GRID_HEIGHT * CELL_SIZE // 2 + 150, 
+        200, 50, 
+        "Change Difficulty", 
+        function=lambda: setattr(restart, 'new_difficulty', diff_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color)), 
+        color=hex_to_rgb(snake_color), 
+        text_color=hex_to_rgb(background_color))
 
-    # Draw the logo and game title onto the screen
-    screen.blit(scaled_logo, logo_pos)
-    screen.blit(title_surf, title_pos)
-
-    # Update the display
-    pygame.display.flip()
-
-    # Wait for any key press or mouse click
-    running = True
-    while running:
+    # Loop to handle input events for restarting or quitting
+    while True:
         for event in pygame.event.get():
-            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+            # Handle quit event
+            if event.type == pygame.QUIT:
                 running = False
                 break
+            # Handle keydown events for restarting and quitting
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_r:
+                    restart.value = True
+                    break
+                if event.key == pygame.K_q:
+                    pygame.quit()
+                    sys.exit()
+            # Update the "High Scores" button
+            high_scores_button.update(screen, event)
+            # Update the "Change Theme" button
+            theme_select_button.update(screen, event)
+            # Update the "Change Difficulty" button
+            diff_select_button.update(screen, event)
 
-def main(GRID_WIDTH, GRID_HEIGHT, theme, high_scores, screen, clock, SPEED):
+        # Break the loop if restarting or not running
+        if restart.value or not running:
+            break
+        
+        # Draw the text surfaces on the screen
+        screen.blit(text_game_over, text_game_over_rect)
+        screen.blit(text_restart, text_restart_rect)
+        screen.blit(text_score, text_score_rect)
+
+        # Update the display
+        pygame.display.flip()
+    
+    return running, restart
+
+def main(GRID_WIDTH, GRID_HEIGHT, theme, high_scores, screen, clock, SPEED, snake_logo):
     running = True
 
     # Main game loop
@@ -498,97 +592,14 @@ def main(GRID_WIDTH, GRID_HEIGHT, theme, high_scores, screen, clock, SPEED):
 
         # Display a "Game Over" screen
         if running:
-            # Get player initials after game over
-            initials = get_initials(GRID_WIDTH, GRID_HEIGHT, screen, color = snake_color, background_color = background_color)
-
-            high_scores.append((score, initials))
-            high_scores.sort(reverse=True)
-            high_scores = high_scores[:10]
-
-            # Save high scores to file
-            save_high_scores(high_scores)
-
-            # Redrawing background to display "Game Over" screen
-            screen.fill(background_color)
-
-            # Set up the font and create text surfaces
-            font = pygame.font.Font(FONT, 16)
-            text_game_over = font.render("Game Over!", True, snake_color, background_color)
-            text_restart = font.render("Press R to restart or Q to quit.", True, snake_color, background_color)
-            text_score = font.render(f"Score: {score}", True, snake_color, background_color)
-            
-            # Set the position of the text surfaces
-            text_game_over_rect = text_game_over.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, GRID_HEIGHT * CELL_SIZE // 2 - 40))
-            text_restart_rect = text_restart.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, GRID_HEIGHT * CELL_SIZE // 2 - 20))
-            text_score_rect = text_score.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, GRID_HEIGHT * CELL_SIZE // 2))
-            
-            # Create the "High Scores" button
-            high_scores_button = Button(
-                (GRID_WIDTH * CELL_SIZE // 2) - 100, 
-                GRID_HEIGHT * CELL_SIZE // 2 + 30, 
-                200, 50, 
-                "High Scores", 
-                function=lambda: show_high_scores_screen(screen, high_scores, background_color, snake_color), 
-                color=hex_to_rgb(snake_color), 
-                text_color=hex_to_rgb(background_color))
-            
-            # "Change Theme" button
-            theme_select_button = Button(
-                (GRID_WIDTH * CELL_SIZE // 2) - 100, 
-                GRID_HEIGHT * CELL_SIZE // 2 + 90, 
-                200, 50, 
-                "Change Theme", 
-                function=lambda: setattr(restart, 'new_theme', theme_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color)), 
-                color=hex_to_rgb(snake_color), 
-                text_color=hex_to_rgb(background_color))
-            
-            # "Change Difficulty" button
-            diff_select_button = Button(
-                (GRID_WIDTH * CELL_SIZE // 2) - 100, 
-                GRID_HEIGHT * CELL_SIZE // 2 + 150, 
-                200, 50, 
-                "Change Difficulty", 
-                function=lambda: setattr(restart, 'new_difficulty', diff_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color)), 
-                color=hex_to_rgb(snake_color), 
-                text_color=hex_to_rgb(background_color))
-
-            # Loop to handle input events for restarting or quitting
-            while True:
-                for event in pygame.event.get():
-                    # Handle quit event
-                    if event.type == pygame.QUIT:
-                        running = False
-                        break
-                    # Handle keydown events for restarting and quitting
-                    if event.type == pygame.KEYDOWN:
-                        if event.key == pygame.K_r:
-                            restart.value = True
-                            break
-                        if event.key == pygame.K_q:
-                            pygame.quit()
-                            sys.exit()
-                    # Update the "High Scores" button
-                    high_scores_button.update(screen, event)
-                    # Update the "Change Theme" button
-                    theme_select_button.update(screen, event)
-                    # Update the "Change Difficulty" button
-                    diff_select_button.update(screen, event)
-
-                # Break the loop if restarting or not running
-                if restart.value or not running:
-                    break
-                
-                # Draw the text surfaces on the screen
-                screen.blit(text_game_over, text_game_over_rect)
-                screen.blit(text_restart, text_restart_rect)
-                screen.blit(text_score, text_score_rect)
-
-                # Update the display
-                pygame.display.flip()
+            running, restart = game_over(running, restart, GRID_WIDTH, GRID_HEIGHT, screen, score, high_scores, snake_color, background_color)
             
             if restart.value:
                 theme = restart.new_theme if restart.new_theme is not None else theme
                 SPEED = restart.new_difficulty if restart.new_difficulty is not None else SPEED
+
+                ### Re-Play Intro Screen
+                intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, snake_logo, "Snake.")
                 restart = Restart()  # Reset the restart object for the next game
 
 if __name__ == "__main__":
@@ -625,6 +636,6 @@ if __name__ == "__main__":
             high_scores = [(int(score), initials) for score, initials in high_scores]
  
     # Play Snake
-    main(GRID_WIDTH, GRID_HEIGHT, game_theme, high_scores, screen, clock, difficulty_value)
+    main(GRID_WIDTH, GRID_HEIGHT, game_theme, high_scores, screen, clock, difficulty_value, snake_logo)
 
     pygame.quit()
