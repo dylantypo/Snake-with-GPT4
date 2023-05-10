@@ -12,7 +12,7 @@ faulthandler.enable()
 
 #### Game Parameters
 # Game constants
-FONT = "Assets/PressStart2P-Regular.ttf"
+FONT = "Assets\Static\PressStart2P-Regular.ttf"
 SNEK_START_LEN = 1 # Initial snake length
 SNEK_MULTIPLIER = 3 # Amount snake grows after eating food
 CELL_SIZE = 40 # Size of each grid cell
@@ -135,7 +135,7 @@ class Button:
         self.bottom_rounded = bottom_rounded # Flag for rounded bottom corners
         # Calculate the highlighted color when the mouse is over the button
         self.highlighted_color = tuple([min(c + 50, 255) for c in self.color])
-        self.font = pygame.font.Font(FONT, 16) # Button font
+        self.font = pygame.font.Font(FONT, 11) # Button font
         self.text_surface = self.font.render(self.text, True, self.text_color) # Rendered text surface
         self.text_rect = self.text_surface.get_rect(center=(width // 2, height // 2)) # Text rectangle
 
@@ -190,9 +190,16 @@ class Button:
         if self.text:
             screen.blit(self.text_surface, self.text_rect.move(self.rect.topleft))
 
+# Restart game flag
+class Restart:
+    def __init__(self):
+        self.value = False
+        self.new_theme = None
+        self.new_difficulty = None
+
 #### Main Functions
 # Function to display pre-game selection menus
-def display_menu(screen, title, themes):
+def display_menu(screen, text, themes):
     # Menu button parameters
     button_width = 200
     button_height = 40
@@ -228,7 +235,7 @@ def display_menu(screen, title, themes):
 
         # Display title text
         font_title = pygame.font.Font(FONT, 24)
-        text_title = font_title.render(str(title), True, (255, 255, 255))
+        text_title = font_title.render(str(text), True, (255, 255, 255))
         text_title_rect = text_title.get_rect(center=(GRID_WIDTH * CELL_SIZE // 2, 50))
         screen.blit(text_title, text_title_rect)
 
@@ -248,7 +255,7 @@ def display_menu(screen, title, themes):
         draw_buttons(screen, menu_buttons)
         pygame.display.flip()
 
-    time.sleep(1)  # Pause for a moment before returning
+    time.sleep(2)  # Pause for a moment before returning
 
 def check_and_create_highscores_file(file_name):
     if not os.path.exists(file_name):
@@ -395,7 +402,10 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
 
         # Check for collisions with food and grow snake
         if snake.collides_with(food.position):
+            current_mus = pygame.mixer.music.get_pos()
             growth_counter = SNEK_MULTIPLIER
+            munch_sound = pygame.mixer.Sound("Assets\Static\munch.wav") # Load munch sound
+            munch_sound.play()
             pygame.time.set_timer(GROWTH_EVENT, 250, loops=growth_counter)
             food = Food(snake)
             munch += 1 # eating + 1
@@ -403,6 +413,7 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
                 score += round((len(snake.body) - SNEK_START_LEN) * 2.5) # double score bonus every 10 foods
             else:
                 score = round((len(snake.body) - SNEK_START_LEN) * 2.5) # normal score increase
+            
 
         
         # Check for collisions with the snake itself
@@ -427,18 +438,34 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
 
     return running, score, background_color, snake_color, high_scores
 
+# Theme Select Menu
+def theme_menu(screen, background_color = (0, 0, 0)):
+    theme_names = list(theme_dict.keys()) # Get theme names from dictionary of themes
+    selected_theme_index = display_menu(screen, "Select Theme", theme_names) # Display theme selection menu
+    game_theme = theme_dict[theme_names[selected_theme_index]] # Store selected theme
+    screen.fill(background_color)
+    return game_theme
+
+# Difficulty selection
+def diff_menu(screen, background_color = (0, 0, 0)):
+    difficulty_index = display_menu(screen, "Select Difficulty", ["Easy", "Medium", "Hard"]) # Display difficulty selection menu
+    difficulty_lambda = lambda index: {0: -10, 1: 0, 2: 10}[index]
+    difficulty_value = difficulty_lambda(difficulty_index) # Convert button index into difficulty value and store as a variable
+    screen.fill(background_color)
+    return difficulty_value + SPEED
+
 def main(theme, high_scores, screen, clock, SPEED):
     running = True
 
     # Main game loop
     while running:
+        restart = Restart()
+
         # Play the game and update high scores
         running, score, background_color, snake_color, high_scores = game_loop(running, screen, clock, theme, high_scores, SPEED)
 
         # Display a "Game Over" screen
         if running:
-            restart = False
-
             # Get player initials after game over
             initials = get_initials(screen, color = snake_color, background_color = background_color)
 
@@ -466,9 +493,30 @@ def main(theme, high_scores, screen, clock, SPEED):
             # Create the "High Scores" button
             high_scores_button = Button(
                 (GRID_WIDTH * CELL_SIZE // 2) - 100, 
-                GRID_HEIGHT * CELL_SIZE // 2 + 30, 200, 50, 
+                GRID_HEIGHT * CELL_SIZE // 2 + 30, 
+                200, 50, 
                 "High Scores", 
                 function=lambda: show_high_scores_screen(screen, high_scores, background_color, snake_color), 
+                color=hex_to_rgb(snake_color), 
+                text_color=hex_to_rgb(background_color))
+            
+            # "Change Theme" button
+            theme_select_button = Button(
+                (GRID_WIDTH * CELL_SIZE // 2) - 100, 
+                GRID_HEIGHT * CELL_SIZE // 2 + 90, 
+                200, 50, 
+                "Change Theme", 
+                function=lambda: setattr(restart, 'new_theme', theme_menu(screen, background_color)), 
+                color=hex_to_rgb(snake_color), 
+                text_color=hex_to_rgb(background_color))
+            
+            # "Change Difficulty" button
+            diff_select_button = Button(
+                (GRID_WIDTH * CELL_SIZE // 2) - 100, 
+                GRID_HEIGHT * CELL_SIZE // 2 + 150, 
+                200, 50, 
+                "Change Difficulty", 
+                function=lambda: setattr(restart, 'new_difficulty', diff_menu(screen, background_color)), 
                 color=hex_to_rgb(snake_color), 
                 text_color=hex_to_rgb(background_color))
 
@@ -482,16 +530,20 @@ def main(theme, high_scores, screen, clock, SPEED):
                     # Handle keydown events for restarting and quitting
                     if event.type == pygame.KEYDOWN:
                         if event.key == pygame.K_r:
-                            restart = True
+                            restart.value = True
                             break
                         if event.key == pygame.K_q:
                             pygame.quit()
                             sys.exit()
                     # Update the "High Scores" button
                     high_scores_button.update(screen, event)
+                    # Update the "Change Theme" button
+                    theme_select_button.update(screen, event)
+                    # Update the "Change Difficulty" button
+                    diff_select_button.update(screen, event)
 
                 # Break the loop if restarting or not running
-                if restart or not running:
+                if restart.value or not running:
                     break
                 
                 # Draw the text surfaces on the screen
@@ -501,27 +553,30 @@ def main(theme, high_scores, screen, clock, SPEED):
 
                 # Update the display
                 pygame.display.flip()
+            
+            if restart.value:
+                theme = restart.new_theme if restart.new_theme is not None else theme
+                SPEED = restart.new_difficulty if restart.new_difficulty is not None else SPEED
+                restart = Restart()  # Reset the restart object for the next game
+                # screen.fill((0,0,0))
 
 if __name__ == "__main__":
     pygame.init()
-    snake_logo = pygame.image.load("Assets/snake-logo.png") # Load snake logo
+    pygame.mixer.init()
+    snake_logo = pygame.image.load("Assets\Static\snake-logo.png") # Load snake logo
     pygame.display.set_icon(snake_logo) # Set snake logo as window icon
     screen = pygame.display.set_mode((GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE)) # Create PyGame screen with prarameters defined at the top
     pygame.display.set_caption("Snake.") # PyGame screen title
     clock = pygame.time.Clock() # Initialize game time
 
-    # Theme Select Menu
-    theme_names = list(theme_dict.keys()) # Get theme names from dictionary of themes
-    selected_theme_index = display_menu(screen, "Select Theme", theme_names) # Display theme selection menu
-    game_theme = theme_dict[theme_names[selected_theme_index]] # Store selected theme
+    pygame.mixer.music.load("Assets\Static\snake_song.wav") # Load theme song
+    pygame.mixer.music.play(-1) # Loop theme song
 
-    # Difficulty selection
-    difficulty_index = display_menu(screen, "Select Difficulty", ["Easy", "Medium", "Hard"]) # Display difficulty selection menu
-    difficulty_lambda = lambda index: {0: -10, 1: 0, 2: 10}[index]
-    difficulty_value = difficulty_lambda(difficulty_index) # Convert button index into difficulty value and store as a variable
-    
+    game_theme = theme_menu(screen) # Show theme select menu
+    difficulty_value = diff_menu(screen) # Show difficulty select menu
+
     #### ALL-TIME SCORES RECORD
-    HIGH_SCORES_FILE = "Assets/high_scores.txt" # Store high scores file as a variable
+    HIGH_SCORES_FILE = "Assets\high_scores.txt" # Store high scores file as a variable
     check_and_create_highscores_file(HIGH_SCORES_FILE)
     high_scores = []
 
@@ -532,6 +587,6 @@ if __name__ == "__main__":
             high_scores = [(int(score), initials) for score, initials in high_scores]
  
     # Play Snake
-    main(game_theme, high_scores, screen, clock, (SPEED + difficulty_value))
+    main(game_theme, high_scores, screen, clock, difficulty_value)
 
     pygame.quit()

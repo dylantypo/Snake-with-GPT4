@@ -11,7 +11,7 @@ Some ideas for expanding the game or enhancing its retro style:
 1. ~~Add a score display that shows the player's current score, which could be based on the snake's length.~~
 2. ~~Add a game over screen with the option to restart the game.~~
 3. ~~Implement different levels of difficulty, such as faster snake movement~~ or additional obstacles.
-4. Add sounds or music to create a more immersive experience.
+4. ~~Add sounds or music to create a more immersive experience.~~
 5. Create a retro-style pixel art for the snake, food, and background.
 6. Customize the game window's appearance, such as adding a retro border or ~~using a pixelated font.~~
 
@@ -27,4 +27,6 @@ Feel free to experiment and modify the code as needed to create the snake game y
 - Press q to Quit and r to play again
 - Press high scores button to see the leader board
 - Press Esc to go back to the Game Over screen
+- Press chnage theme or change difficulty buttons to modify the game
+- Then press r to restart with your chosen settings
 5. Repeat
