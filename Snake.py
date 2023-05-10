@@ -16,8 +16,6 @@ FONT = "Assets\Static\PressStart2P-Regular.ttf"
 SNEK_START_LEN = 1 # Initial snake length
 SNEK_MULTIPLIER = 3 # Amount snake grows after eating food
 CELL_SIZE = 40 # Size of each grid cell
-GRID_WIDTH = 30 # Grid width (number of cells)
-GRID_HEIGHT = 20 # Grid height (number of cells)
 SPEED = 20 # Game speed
 sX = 1 # Initial snake x-direction
 sY = 0 # Initial snake y-direction
@@ -199,7 +197,7 @@ class Restart:
 
 #### Main Functions
 # Function to display pre-game selection menus
-def display_menu(screen, text, themes):
+def display_menu(GRID_WIDTH, GRID_HEIGHT, screen, text, themes):
     # Menu button parameters
     button_width = 200
     button_height = 40
@@ -327,7 +325,7 @@ def draw_cell(screen, pos, color, glow_color=None, glow_radius=35, glow_alpha=35
 def hex_to_rgb(hex_color):
     return tuple(int(hex_color[i:i+2], 16) for i in (1, 3, 5))
 
-def get_initials(screen, prompt="Enter name: ", color=(255, 255, 255), background_color=(0, 0, 0)):
+def get_initials(GRID_WIDTH, GRID_HEIGHT, screen, prompt="Enter name: ", color=(255, 255, 255), background_color=(0, 0, 0)):
     text = ''
     while True:
         for event in pygame.event.get():
@@ -402,7 +400,6 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
 
         # Check for collisions with food and grow snake
         if snake.collides_with(food.position):
-            current_mus = pygame.mixer.music.get_pos()
             growth_counter = SNEK_MULTIPLIER
             munch_sound = pygame.mixer.Sound("Assets\Static\munch.wav") # Load munch sound
             munch_sound.play()
@@ -439,22 +436,57 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
     return running, score, background_color, snake_color, high_scores
 
 # Theme Select Menu
-def theme_menu(screen, background_color = (0, 0, 0)):
+def theme_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color = (0, 0, 0)):
     theme_names = list(theme_dict.keys()) # Get theme names from dictionary of themes
-    selected_theme_index = display_menu(screen, "Select Theme", theme_names) # Display theme selection menu
+    selected_theme_index = display_menu(GRID_WIDTH, GRID_HEIGHT, screen, "Select Theme", theme_names) # Display theme selection menu
     game_theme = theme_dict[theme_names[selected_theme_index]] # Store selected theme
     screen.fill(background_color)
     return game_theme
 
 # Difficulty selection
-def diff_menu(screen, background_color = (0, 0, 0)):
-    difficulty_index = display_menu(screen, "Select Difficulty", ["Easy", "Medium", "Hard"]) # Display difficulty selection menu
+def diff_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color = (0, 0, 0)):
+    difficulty_index = display_menu(GRID_WIDTH, GRID_HEIGHT, screen, "Select Difficulty", ["Easy", "Medium", "Hard"]) # Display difficulty selection menu
     difficulty_lambda = lambda index: {0: -10, 1: 0, 2: 10}[index]
     difficulty_value = difficulty_lambda(difficulty_index) # Convert button index into difficulty value and store as a variable
     screen.fill(background_color)
     return difficulty_value + SPEED
 
-def main(theme, high_scores, screen, clock, SPEED):
+def get_display_info():
+    #### Get Current Display Info
+    infoObject = pygame.display.Info()
+    DISPLAY_WIDTH, DISPLAY_HEIGHT = infoObject.current_w, infoObject.current_h
+    return DISPLAY_WIDTH, DISPLAY_HEIGHT
+
+def intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, logo, game_title):
+    # Scale the logo
+    scaled_logo = pygame.transform.scale(logo, (logo.get_width() * 5, logo.get_height() * 5))
+
+    # Create a font object for the game title
+    font = pygame.font.Font(FONT, 72)
+    # Create a surface for the game title
+    title_surf = font.render(game_title, True, (255, 255, 255))
+
+    # Calculate the positions of the logo and game title
+    total_width = scaled_logo.get_width() + title_surf.get_width()
+    logo_pos = ((DISPLAY_WIDTH - total_width) // 2, (DISPLAY_HEIGHT - scaled_logo.get_height()) // 2)
+    title_pos = (logo_pos[0] + scaled_logo.get_width(), (DISPLAY_HEIGHT - title_surf.get_height()) // 2)
+
+    # Draw the logo and game title onto the screen
+    screen.blit(scaled_logo, logo_pos)
+    screen.blit(title_surf, title_pos)
+
+    # Update the display
+    pygame.display.flip()
+
+    # Wait for any key press or mouse click
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN or event.type == pygame.MOUSEBUTTONDOWN:
+                running = False
+                break
+
+def main(GRID_WIDTH, GRID_HEIGHT, theme, high_scores, screen, clock, SPEED):
     running = True
 
     # Main game loop
@@ -467,7 +499,7 @@ def main(theme, high_scores, screen, clock, SPEED):
         # Display a "Game Over" screen
         if running:
             # Get player initials after game over
-            initials = get_initials(screen, color = snake_color, background_color = background_color)
+            initials = get_initials(GRID_WIDTH, GRID_HEIGHT, screen, color = snake_color, background_color = background_color)
 
             high_scores.append((score, initials))
             high_scores.sort(reverse=True)
@@ -506,7 +538,7 @@ def main(theme, high_scores, screen, clock, SPEED):
                 GRID_HEIGHT * CELL_SIZE // 2 + 90, 
                 200, 50, 
                 "Change Theme", 
-                function=lambda: setattr(restart, 'new_theme', theme_menu(screen, background_color)), 
+                function=lambda: setattr(restart, 'new_theme', theme_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color)), 
                 color=hex_to_rgb(snake_color), 
                 text_color=hex_to_rgb(background_color))
             
@@ -516,7 +548,7 @@ def main(theme, high_scores, screen, clock, SPEED):
                 GRID_HEIGHT * CELL_SIZE // 2 + 150, 
                 200, 50, 
                 "Change Difficulty", 
-                function=lambda: setattr(restart, 'new_difficulty', diff_menu(screen, background_color)), 
+                function=lambda: setattr(restart, 'new_difficulty', diff_menu(GRID_WIDTH, GRID_HEIGHT, screen, background_color)), 
                 color=hex_to_rgb(snake_color), 
                 text_color=hex_to_rgb(background_color))
 
@@ -558,22 +590,28 @@ def main(theme, high_scores, screen, clock, SPEED):
                 theme = restart.new_theme if restart.new_theme is not None else theme
                 SPEED = restart.new_difficulty if restart.new_difficulty is not None else SPEED
                 restart = Restart()  # Reset the restart object for the next game
-                # screen.fill((0,0,0))
 
 if __name__ == "__main__":
     pygame.init()
     pygame.mixer.init()
     snake_logo = pygame.image.load("Assets\Static\snake-logo.png") # Load snake logo
     pygame.display.set_icon(snake_logo) # Set snake logo as window icon
-    screen = pygame.display.set_mode((GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE)) # Create PyGame screen with prarameters defined at the top
+    DISPLAY_WIDTH, DISPLAY_HEIGHT = get_display_info()
+    # Calculate grid dimensions based on the display size and cell size
+    GRID_WIDTH = DISPLAY_WIDTH // CELL_SIZE
+    GRID_HEIGHT = DISPLAY_HEIGHT // CELL_SIZE
+    screen = pygame.display.set_mode((GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE), pygame.FULLSCREEN) # Create a full screen view
     pygame.display.set_caption("Snake.") # PyGame screen title
     clock = pygame.time.Clock() # Initialize game time
 
     pygame.mixer.music.load("Assets\Static\snake_song.wav") # Load theme song
     pygame.mixer.music.play(-1) # Loop theme song
 
-    game_theme = theme_menu(screen) # Show theme select menu
-    difficulty_value = diff_menu(screen) # Show difficulty select menu
+    ### Intro Screen
+    intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, snake_logo, "Snake.")
+
+    game_theme = theme_menu(GRID_WIDTH, GRID_HEIGHT, screen) # Show theme select menu
+    difficulty_value = diff_menu(GRID_WIDTH, GRID_HEIGHT, screen) # Show difficulty select menu
 
     #### ALL-TIME SCORES RECORD
     HIGH_SCORES_FILE = "Assets\high_scores.txt" # Store high scores file as a variable
@@ -587,6 +625,6 @@ if __name__ == "__main__":
             high_scores = [(int(score), initials) for score, initials in high_scores]
  
     # Play Snake
-    main(game_theme, high_scores, screen, clock, difficulty_value)
+    main(GRID_WIDTH, GRID_HEIGHT, game_theme, high_scores, screen, clock, difficulty_value)
 
     pygame.quit()
