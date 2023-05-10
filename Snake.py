@@ -19,9 +19,9 @@ music_file = "Assets\Static\snake_song.wav"
 munch_file = "Assets\Static\munch.wav"
 # Game constants
 SNEK_START_LEN = 1 # Initial snake length
-SNEK_MULTIPLIER = 7 # Amount snake grows after eating food
+SNEK_MULTIPLIER = 3 # Amount snake grows after eating food
 CELL_SIZE = 40 # Size of each grid cell
-SPEED = 25 # Game speed
+SPEED = 20 # Game speed
 sX = 1 # Initial snake x-direction
 sY = 0 # Initial snake y-direction
 
@@ -306,7 +306,7 @@ def draw_glowing_circle(screen, pos, radius, color, alpha):
     for i in range(radius, 0, -1):
         pygame.gfxdraw.filled_circle(screen, x, y, i, (*color, min(alpha // i, 255)))
 
-def draw_cell(screen, pos, color, glow_color=None, glow_radius=50, glow_alpha=5, alpha=100):
+def draw_cell(screen, pos, color, glow_color=None, glow_radius=35, glow_alpha=70, alpha=100):
     if glow_color:
         x, y = pos
         draw_glowing_circle(screen, 
@@ -468,6 +468,7 @@ def game_loop(running, screen, clock, game_theme, high_scores, difficulty_value)
             food = Food(snake)
 
             if munch == 10:
+                difficulty_value += 5 # increase speed every 10 foods
                 score += round((len(snake.body) - snake_length) * 2.5) # double score bonus every 10 foods
                 munch -= 10
             else:
