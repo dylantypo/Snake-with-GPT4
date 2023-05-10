@@ -11,8 +11,12 @@ import faulthandler
 faulthandler.enable()
 
 #### Game Parameters
-# Game constants
+# Game Files
+snake_logo = pygame.image.load("Assets\Static\snake-logo.png")
 FONT = "Assets\Static\PressStart2P-Regular.ttf"
+music_file = "Assets\Static\snake_song.wav"
+HIGH_SCORES_FILE = "Assets\high_scores.txt"
+# Game constants
 SNEK_START_LEN = 1 # Initial snake length
 SNEK_MULTIPLIER = 3 # Amount snake grows after eating food
 CELL_SIZE = 40 # Size of each grid cell
@@ -406,9 +410,9 @@ def intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, logo, game_title):
                 running = False
                 break
 
-def game_loop(running, screen, clock, theme, high_scores, SPEED):
+def game_loop(running, screen, clock, game_theme, high_scores, difficulty_value):
     # Initialize colors and game objects
-    background_color, snake_color, food_color = theme["background_color"], theme["snake_color"], theme["food_color"]
+    background_color, snake_color, food_color = game_theme["background_color"], game_theme["snake_color"], game_theme["food_color"]
     snake = Snake(SNEK_START_LEN)
     food = Food(snake)
 
@@ -464,8 +468,6 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
                 score += round((len(snake.body) - SNEK_START_LEN) * 2.5) # double score bonus every 10 foods
             else:
                 score = round((len(snake.body) - SNEK_START_LEN) * 2.5) # normal score increase
-            
-
         
         # Check for collisions with the snake itself
         if snake.collides_with(snake.body[0], ignore_head=True):
@@ -485,7 +487,7 @@ def game_loop(running, screen, clock, theme, high_scores, SPEED):
 
         # Update the display and control game speed
         pygame.display.flip()
-        clock.tick(SPEED)
+        clock.tick(difficulty_value)
 
     return running, score, background_color, snake_color, high_scores
 
@@ -580,7 +582,32 @@ def game_over(running, restart, GRID_WIDTH, GRID_HEIGHT, screen, score, high_sco
     
     return running, restart
 
-def main(GRID_WIDTH, GRID_HEIGHT, theme, high_scores, screen, clock, SPEED, snake_logo):
+def main(GRID_WIDTH, GRID_HEIGHT):
+    pygame.mixer.music.load(music_file)
+    pygame.display.set_icon(snake_logo) # Set snake logo as window icon
+    
+    screen = pygame.display.set_mode((GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE), pygame.FULLSCREEN) # Create a full screen view
+    pygame.display.set_caption("Snake.") # PyGame screen title
+    clock = pygame.time.Clock() # Initialize game time
+
+    pygame.mixer.music.play(-1) # Loop theme song
+
+    ### Intro Screen
+    intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, snake_logo, "Snake.")
+
+    game_theme = theme_menu(GRID_WIDTH, GRID_HEIGHT, screen) # Show theme select menu
+    difficulty_value = diff_menu(GRID_WIDTH, GRID_HEIGHT, screen) # Show difficulty select menu
+
+    #### ALL-TIME SCORES RECORD
+    check_and_create_highscores_file(HIGH_SCORES_FILE)
+    high_scores = []
+
+    # Load high scores from file
+    if os.path.exists(HIGH_SCORES_FILE):
+        with open(HIGH_SCORES_FILE, "r") as file:
+            high_scores = [tuple(line.strip().split(",")) for line in file]
+            high_scores = [(int(score), initials) for score, initials in high_scores]
+
     running = True
 
     # Main game loop
@@ -588,7 +615,7 @@ def main(GRID_WIDTH, GRID_HEIGHT, theme, high_scores, screen, clock, SPEED, snak
         restart = Restart()
 
         # Play the game and update high scores
-        running, score, background_color, snake_color, high_scores = game_loop(running, screen, clock, theme, high_scores, SPEED)
+        running, score, background_color, snake_color, high_scores = game_loop(running, screen, clock, game_theme, high_scores, difficulty_value)
 
         # Display a "Game Over" screen
         if running:
@@ -605,37 +632,10 @@ def main(GRID_WIDTH, GRID_HEIGHT, theme, high_scores, screen, clock, SPEED, snak
 if __name__ == "__main__":
     pygame.init()
     pygame.mixer.init()
-    snake_logo = pygame.image.load("Assets\Static\snake-logo.png") # Load snake logo
-    pygame.display.set_icon(snake_logo) # Set snake logo as window icon
     DISPLAY_WIDTH, DISPLAY_HEIGHT = get_display_info()
     # Calculate grid dimensions based on the display size and cell size
     GRID_WIDTH = DISPLAY_WIDTH // CELL_SIZE
     GRID_HEIGHT = DISPLAY_HEIGHT // CELL_SIZE
-    screen = pygame.display.set_mode((GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE), pygame.FULLSCREEN) # Create a full screen view
-    pygame.display.set_caption("Snake.") # PyGame screen title
-    clock = pygame.time.Clock() # Initialize game time
-
-    pygame.mixer.music.load("Assets\Static\snake_song.wav") # Load theme song
-    pygame.mixer.music.play(-1) # Loop theme song
-
-    ### Intro Screen
-    intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, snake_logo, "Snake.")
-
-    game_theme = theme_menu(GRID_WIDTH, GRID_HEIGHT, screen) # Show theme select menu
-    difficulty_value = diff_menu(GRID_WIDTH, GRID_HEIGHT, screen) # Show difficulty select menu
-
-    #### ALL-TIME SCORES RECORD
-    HIGH_SCORES_FILE = "Assets\high_scores.txt" # Store high scores file as a variable
-    check_and_create_highscores_file(HIGH_SCORES_FILE)
-    high_scores = []
-
-    # Load high scores from file
-    if os.path.exists(HIGH_SCORES_FILE):
-        with open(HIGH_SCORES_FILE, "r") as file:
-            high_scores = [tuple(line.strip().split(",")) for line in file]
-            high_scores = [(int(score), initials) for score, initials in high_scores]
- 
     # Play Snake
-    main(GRID_WIDTH, GRID_HEIGHT, game_theme, high_scores, screen, clock, difficulty_value, snake_logo)
-
+    main(GRID_WIDTH, GRID_HEIGHT)
     pygame.quit()
