@@ -6,10 +6,6 @@ import time
 import sys
 import os
 
-#### Fault Handler
-import faulthandler
-faulthandler.enable()
-
 #### Game Parameters
 # Game Files
 snake_logo = pygame.image.load("Assets\Static\snake-logo.png")
@@ -17,6 +13,12 @@ FONT = "Assets\Static\PressStart2P-Regular.ttf"
 HIGH_SCORES_FILE = "Assets\high_scores.txt"
 music_file = "Assets\Static\snake_song.wav"
 munch_file = "Assets\Static\munch.wav"
+
+# snake_logo = pygame.image.load("..\..\Assets\Static\snake-logo.png")
+# FONT = "..\..\Assets\Static\PressStart2P-Regular.ttf"
+# HIGH_SCORES_FILE = "..\..\Assets\high_scores.txt"
+# music_file = "..\..\Assets\Static\snake_song.wav"
+# munch_file = "..\..\Assets\Static\munch.wav"
 # Game constants
 SNEK_START_LEN = 1 # Initial snake length
 SNEK_MULTIPLIER = 3 # Amount snake grows after eating food

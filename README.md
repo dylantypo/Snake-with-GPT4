@@ -17,7 +17,12 @@ Some ideas for expanding the game or enhancing its retro style:
 
 Feel free to experiment and modify the code as needed to create the snake game you envision.
 
-### ***Game Instructions***:
+### ***How to Play***:
+1. Download repo
+2. Open "dist" folder
+3. Run Snake application file
+
+### ***Game Guide***:
 1. Click any key to get past the title screen.
 2. Select a theme.
 3. Select a difficulty.
