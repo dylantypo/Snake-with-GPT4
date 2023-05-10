@@ -14,13 +14,14 @@ faulthandler.enable()
 # Game Files
 snake_logo = pygame.image.load("Assets\Static\snake-logo.png")
 FONT = "Assets\Static\PressStart2P-Regular.ttf"
-music_file = "Assets\Static\snake_song.wav"
 HIGH_SCORES_FILE = "Assets\high_scores.txt"
+music_file = "Assets\Static\snake_song.wav"
+munch_file = "Assets\Static\munch.wav"
 # Game constants
 SNEK_START_LEN = 1 # Initial snake length
-SNEK_MULTIPLIER = 3 # Amount snake grows after eating food
+SNEK_MULTIPLIER = 7 # Amount snake grows after eating food
 CELL_SIZE = 40 # Size of each grid cell
-SPEED = 20 # Game speed
+SPEED = 25 # Game speed
 sX = 1 # Initial snake x-direction
 sY = 0 # Initial snake y-direction
 
@@ -305,7 +306,7 @@ def draw_glowing_circle(screen, pos, radius, color, alpha):
     for i in range(radius, 0, -1):
         pygame.gfxdraw.filled_circle(screen, x, y, i, (*color, min(alpha // i, 255)))
 
-def draw_cell(screen, pos, color, glow_color=None, glow_radius=35, glow_alpha=35, alpha=100):
+def draw_cell(screen, pos, color, glow_color=None, glow_radius=50, glow_alpha=5, alpha=100):
     if glow_color:
         x, y = pos
         draw_glowing_circle(screen, 
@@ -416,8 +417,10 @@ def game_loop(running, screen, clock, game_theme, high_scores, difficulty_value)
     snake = Snake(SNEK_START_LEN)
     food = Food(snake)
 
-    munch = 0 # how many times the snake eats
+    total_food = 0
+    munch = 0 
     score = 0 # initial score value
+    snake_length = len(snake.body)
 
     game_over = False
 
@@ -459,15 +462,20 @@ def game_loop(running, screen, clock, game_theme, high_scores, difficulty_value)
         # Check for collisions with food and grow snake
         if snake.collides_with(food.position):
             growth_counter = SNEK_MULTIPLIER
-            munch_sound = pygame.mixer.Sound("Assets\Static\munch.wav") # Load munch sound
+            munch_sound = pygame.mixer.Sound(munch_file) # Load munch sound
             munch_sound.play()
-            pygame.time.set_timer(GROWTH_EVENT, 250, loops=growth_counter)
+            pygame.time.set_timer(GROWTH_EVENT, 150, loops=growth_counter)
             food = Food(snake)
-            munch += 1 # eating + 1
-            if munch // 10 == 0:
-                score += round((len(snake.body) - SNEK_START_LEN) * 2.5) # double score bonus every 10 foods
+
+            if munch == 10:
+                score += round((len(snake.body) - snake_length) * 2.5) # double score bonus every 10 foods
+                munch -= 10
             else:
-                score = round((len(snake.body) - SNEK_START_LEN) * 2.5) # normal score increase
+                score += round((len(snake.body) - snake_length) * 1.25) # normal score increase
+            
+            # eating + 1
+            total_food += 1
+            munch += 1
         
         # Check for collisions with the snake itself
         if snake.collides_with(snake.body[0], ignore_head=True):
@@ -585,11 +593,9 @@ def game_over(running, restart, GRID_WIDTH, GRID_HEIGHT, screen, score, high_sco
 def main(GRID_WIDTH, GRID_HEIGHT):
     pygame.mixer.music.load(music_file)
     pygame.display.set_icon(snake_logo) # Set snake logo as window icon
-    
     screen = pygame.display.set_mode((GRID_WIDTH * CELL_SIZE, GRID_HEIGHT * CELL_SIZE), pygame.FULLSCREEN) # Create a full screen view
     pygame.display.set_caption("Snake.") # PyGame screen title
     clock = pygame.time.Clock() # Initialize game time
-
     pygame.mixer.music.play(-1) # Loop theme song
 
     ### Intro Screen
@@ -622,8 +628,8 @@ def main(GRID_WIDTH, GRID_HEIGHT):
             running, restart = game_over(running, restart, GRID_WIDTH, GRID_HEIGHT, screen, score, high_scores, snake_color, background_color)
             
             if restart.value:
-                theme = restart.new_theme if restart.new_theme is not None else theme
-                SPEED = restart.new_difficulty if restart.new_difficulty is not None else SPEED
+                game_theme = restart.new_theme if restart.new_theme is not None else game_theme
+                difficulty_value = restart.new_difficulty if restart.new_difficulty is not None else difficulty_value
 
                 ### Re-Play Intro Screen
                 intro_screen(DISPLAY_WIDTH, DISPLAY_HEIGHT, screen, snake_logo, "Snake.")
