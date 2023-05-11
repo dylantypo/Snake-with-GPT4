@@ -466,6 +466,7 @@ def game_loop(running, screen, clock, game_theme, high_scores, difficulty_value)
         if snake.collides_with(food.position):
             growth_counter = SNEK_MULTIPLIER
             munch_sound = pygame.mixer.Sound(munch_file) # Load munch sound
+            munch_sound.set_volume(0.25)
             munch_sound.play()
             pygame.time.set_timer(GROWTH_EVENT, 150, loops=growth_counter)
             food = Food(snake)
