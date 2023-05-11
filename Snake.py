@@ -14,6 +14,7 @@ HIGH_SCORES_FILE = "Assets\high_scores.txt"
 music_file = "Assets\Static\snake_song.wav"
 munch_file = "Assets\Static\munch.wav"
 
+# EXE File Extensions
 # snake_logo = pygame.image.load("..\..\Assets\Static\snake-logo.png")
 # FONT = "..\..\Assets\Static\PressStart2P-Regular.ttf"
 # HIGH_SCORES_FILE = "..\..\Assets\high_scores.txt"
@@ -206,8 +207,8 @@ class Restart:
 # Function to display pre-game selection menus
 def display_menu(GRID_WIDTH, GRID_HEIGHT, screen, text, themes):
     # Menu button parameters
-    button_width = 200
-    button_height = 40
+    button_width = 250
+    button_height = 90
     button_spacing = 10
     total_buttons_height = len(themes) * button_height + (len(themes) - 1) * button_spacing
     start_y = (GRID_HEIGHT * CELL_SIZE - total_buttons_height) // 2
