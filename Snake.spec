@@ -37,6 +37,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
+    icon=['Assets\\Static\\snake-logo.ico'],
 )
 coll = COLLECT(
     exe,
