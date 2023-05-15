@@ -1,3 +1,5 @@
+![Title Screen](Assets/Static/Banner_ScreenShot.jpg?raw=true)
+
 # Snake Game Created with ChatGPT-4
 
 ### Message from ChatGPT
